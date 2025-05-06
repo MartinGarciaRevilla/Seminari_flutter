@@ -1,3 +1,5 @@
+Video Explicatiu del codi modificat: https://www.youtube.com/watch?v=bvyu43LgKgQ  Referencies: codi grup flutter y chatGPT
+
 # seminari_flutter
 
 A new Flutter project.
