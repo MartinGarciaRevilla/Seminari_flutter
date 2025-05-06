@@ -9,11 +9,12 @@ class BorrarScreen extends StatefulWidget {
   @override
   State<BorrarScreen> createState() => _BorrarScreenState();
 }
+
 class _BorrarScreenState extends State<BorrarScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<UserProvider>(context, listen: true);
-    
+
     return LayoutWrapper(
       title: 'Esborrar usuaris',
       child: Padding(
@@ -125,7 +126,6 @@ class _BorrarScreenState extends State<BorrarScreen> {
                         return UserCard(
                           user: user,
                           onDelete: () {
-                            // Verificar si l'usuari té una ID vàlida abans de mostrar el diàleg
                             if (user.id != null) {
                               _showDeleteConfirmation(context, user.id!, user.name);
                             } else {
@@ -148,12 +148,13 @@ class _BorrarScreenState extends State<BorrarScreen> {
       ),
     );
   }
+
   void _showDeleteConfirmation(BuildContext context, String userId, String userName) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirmar'),
-        content: Text('Estàs segur que vols eliminar l\'usurai $userName?'),
+        content: Text('Estàs segur que vols eliminar l\'usuari $userName?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -163,27 +164,37 @@ class _BorrarScreenState extends State<BorrarScreen> {
             onPressed: () async {
               Navigator.pop(context);
               final provider = Provider.of<UserProvider>(context, listen: false);
-              final success = await provider.eliminarUsuariPerId(userId);
-              if (success) {
+              try {
+                final success = await provider.eliminarUsuariPerId(userId);
+                if (success) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('L\'usuari $userName ha estat eliminat'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('No s\'ha pogut eliminar l\'usuari: ${provider.error ?? "Error desconegut"}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } catch (e) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('L\'usuari $userName ha estat eliminat'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('No s\'ha pogut eliminar l\'usuari: ${provider.error ?? "Error desconegut"}'),
+                    content: Text('Error inesperat: $e'),
                     backgroundColor: Colors.red,
                   ),
                 );
               }
             },
-            child: const Text('ELIMINAR'),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('ELIMINAR'),
           ),
         ],
       ),

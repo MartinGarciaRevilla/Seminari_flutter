@@ -14,14 +14,14 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['_id'], 
-      name: json['name'] ?? '',
-      age: json['age'] ?? 0,
-      email: json['email'] ?? '',
-      password: json['password'] ?? '',
-    );
-  }
+  return User(
+    id: json['_id'], // Asegúrate de que el backend devuelve este campo
+    name: json['name'] ?? '',
+    age: json['age'] ?? 0,
+    email: json['email'] ?? '',
+    password: json['password'] ?? '',
+  );
+}
 
   Map<String, dynamic> toJson() {
     return {

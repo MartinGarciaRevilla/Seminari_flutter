@@ -17,32 +17,31 @@ class AuthService {
   }
 
   //login
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    final url = Uri.parse('$_baseUrl/login');
+Future<Map<String, dynamic>> login(String email, String password) async {
+  final url = Uri.parse('$_baseUrl/login');
+  final body = json.encode({'email': email, 'password': password});
 
-    final body = json.encode({'email': email, 'password': password});
+  try {
+    print("Enviando solicitud POST a: $url");
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
 
-    try {
-      print("enviant solicitud post a: $url");
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      );
+    print("Respuesta recibida con código: ${response.statusCode}");
 
-      print("Resposta rebuda amb codi: ${response.statusCode}");
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        return {'error': 'email o contrasenya incorrectes'};
-      }
-    } catch (e) {
-      print("Error al fer la solicitud: $e");
-      return {'error': 'Error de connexió'};
+    if (response.statusCode == 200) {
+      final userData = json.decode(response.body);
+      return userData; // Devolver los datos completos del usuario
+    } else {
+      return {'error': 'Email o contraseña incorrectos'};
     }
+  } catch (e) {
+    print("Error al realizar la solicitud: $e");
+    return {'error': 'Error de conexión'};
   }
-
+}
   void logout() {
     isLoggedIn = false; // Cambia el estado de autenticación a no autenticado
     print("Sessió tancada");

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../provider/users_provider.dart';
 import '../widgets/Layout.dart';
-import '../services/auth_service.dart';
 
 class PerfilScreen extends StatelessWidget {
   const PerfilScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: true);
+    final user = userProvider.loggedInUser;
+
     return LayoutWrapper(
       title: 'Perfil',
       child: SingleChildScrollView(
@@ -26,17 +30,15 @@ class PerfilScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Exemple',
+                    user?.name ?? 'Usuari desconegut',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'demo@exemple.com',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(color: Colors.grey),
+                    user?.email ?? 'Email no disponible',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey),
                   ),
                   const SizedBox(height: 32),
                   Card(
@@ -48,14 +50,9 @@ class PerfilScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
                         children: [
-                          _buildProfileItem(
-                            context,
-                            Icons.badge,
-                            'ID',
-                            '67f8f3103368468b6e9d509c',
-                          ),
+                          _buildProfileItem(context, Icons.badge, 'ID', user?.id ?? 'Sin ID'),
                           const Divider(),
-                          _buildProfileItem(context, Icons.cake, 'Edat', '22'),
+                          _buildProfileItem(context, Icons.cake, 'Edat', '${user?.age ?? 'Desconeguda'}'),
                         ],
                       ),
                     ),
@@ -81,12 +78,14 @@ class PerfilScreen extends StatelessWidget {
                             Icons.edit,
                             'Editar Perfil',
                             'Actualitza la teva informació personal',
+                            onTap: () => context.go('/editar'),
                           ),
                           _buildSettingItem(
                             context,
                             Icons.lock,
                             'Canviar contrasenya',
                             'Actualitzar la contrasenya',
+                            onTap: () => context.go('/editar'), // Reutiliza la pantalla de edición
                           ),
                         ],
                       ),
@@ -94,29 +93,17 @@ class PerfilScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton.icon(
-                    onPressed: () async {
-                      try {
-                        final authService = AuthService();
-                        authService.logout();
-                        context.go('/login');
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error al tancar sessió: $e')),
-                        );
-                      }
+                    onPressed: () {
+                      // Logout logic
                     },
                     icon: const Icon(Icons.logout),
                     label: const Text('TANCAR SESSIÓ'),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -126,13 +113,7 @@ class PerfilScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileItem(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value, {
-    Color? valueColor,
-  }) {
+  Widget _buildProfileItem(BuildContext context, IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Row(
@@ -143,18 +124,8 @@ class PerfilScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: valueColor,
-                  ),
-                ),
+                Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -163,18 +134,14 @@ class PerfilScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String subtitle,
-  ) {
+  Widget _buildSettingItem(BuildContext context, IconData icon, String title, String subtitle,
+      {VoidCallback? onTap}) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(title),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: () {},
+      onTap: onTap,
     );
   }
 }

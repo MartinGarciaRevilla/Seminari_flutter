@@ -12,7 +12,6 @@ final GoRouter appRouter = GoRouter(
   initialLocation: AuthService().isLoggedIn ? '/' : '/login',
   routes: [
     GoRoute(path: '/login', builder: (context, state) => LoginPage()),
-    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
     GoRoute(
       path: '/',
       builder: (context, state) => const HomeScreen(),
@@ -39,6 +38,7 @@ final GoRouter appRouter = GoRouter(
           path: 'profile',
           builder: (context, state) => const PerfilScreen(),
         ),
+      
       ],
     ),
   ],

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-//import 'package:go_router/go_router.dart';
-import 'package:seminari_flutter/provider/users_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:seminari_flutter/widgets/Layout.dart';
+import '../provider/users_provider.dart';
+import '../models/user.dart';
 
 class EditarScreen extends StatefulWidget {
   const EditarScreen({super.key});
@@ -12,206 +11,119 @@ class EditarScreen extends StatefulWidget {
 }
 
 class _EditarScreenState extends State<EditarScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final nomController = TextEditingController();
-  final edatController = TextEditingController();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
-  void dispose() {
-    nomController.dispose();
-    edatController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final user = Provider.of<UserProvider>(context, listen: false).loggedInUser;
+    if (user != null) {
+      _nameController.text = user.name;
+      _ageController.text = user.age.toString();
+      _emailController.text = user.email;
+      _passwordController.text = user.password; // Prellenar con la contraseña actual
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<UserProvider>(context, listen: true);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    return LayoutWrapper(
-      title: 'Create User',
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Crear nou usuari',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Omple el formulari a continuació per afegir un nou usuari al sistema.',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildFormField(
-                              controller: nomController,
-                              label: 'Nom',
-                              icon: Icons.person,
-                              validator: (value) => value == null || value.isEmpty 
-                                  ? 'Cal omplir el nom' 
-                                  : null,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFormField(
-                              controller: edatController,
-                              label: 'Edat',
-                              icon: Icons.cake,
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Cal omplir l\'edat';
-                                }
-                                final age = int.tryParse(value);
-                                if (age == null || age < 0) {
-                                  return 'Si us plau, insereix una edat vàlida';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFormField(
-                              controller: emailController,
-                              label: 'Correu electrònic',
-                              icon: Icons.email,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'El correu electrònic no pot estar buit';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Si us plau insereix una adreça vàlida';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFormField(
-                              controller: passwordController,
-                              label: 'Contrasenya',
-                              icon: Icons.lock,
-                              obscureText: true,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'La contrasenya no pot estar buida';
-                                }
-                                if (value.length < 6) {
-                                  return 'La contrasenya ha de tenir almenys 6 caràcters';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 32),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  provider.crearUsuari(
-                                    nomController.text,
-                                    int.tryParse(edatController.text) ?? 0,
-                                    emailController.text,
-                                    passwordController.text,
-                                  );
-
-                                  nomController.clear();
-                                  edatController.clear();
-                                  emailController.clear();
-                                  passwordController.clear();
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Text('Usuari creat correctament!'),
-                                      backgroundColor: Colors.green,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.save),
-                              label: const Text(
-                                'CREAR USUARI',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+    return Scaffold(
+      appBar: AppBar(title: const Text('Editar Perfil')),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nom'),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'El nom és obligatori' : null,
               ),
-            ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _ageController,
+                decoration: const InputDecoration(labelText: 'Edat'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'L\'edat és obligatòria';
+                  }
+                  final age = int.tryParse(value);
+                  if (age == null || age <= 0) {
+                    return 'Introdueix una edat vàlida';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Correu electrònic'),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'El correu és obligatori' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: 'Contrasenya'),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'La contrasenya és obligatòria';
+                  }
+                  if (value.length < 6) {
+                    return 'La contrasenya ha de tenir almenys 6 caràcters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    final updatedUser = User(
+                      id: userProvider.loggedInUser?.id,
+                      name: _nameController.text,
+                      age: int.parse(_ageController.text),
+                      email: _emailController.text,
+                      password: _passwordController.text, // Actualizar la contraseña
+                    );
+
+                    final success = await userProvider.updateUser(updatedUser);
+
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Perfil actualitzat correctament'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      Navigator.pop(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Error actualitzant el perfil: ${userProvider.error ?? "Error desconegut"}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Guardar Canvis'),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFormField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscureText = false,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-      ),
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      validator: validator,
     );
   }
 }

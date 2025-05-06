@@ -4,10 +4,12 @@ import '../services/UserService.dart';
 
 class UserProvider with ChangeNotifier {
   List<User> _users = [];
+  User? _loggedInUser;
   bool _isLoading = false;
   String? _error;
 
   List<User> get users => _users;
+  User? get loggedInUser => _loggedInUser;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -24,7 +26,6 @@ class UserProvider with ChangeNotifier {
   Future<void> loadUsers() async {
     _setLoading(true);
     _setError(null);
-    //notifyListeners();
 
     try {
       _users = await UserService.getUsers();
@@ -35,72 +36,48 @@ class UserProvider with ChangeNotifier {
       _setLoading(false);
     }
   }
+  
 
-  Future<bool> crearUsuari(String nom, int edat, String email, String password) async {
-    _setLoading(true);
-    _setError(null);
+ void setLoggedInUser(User user) {
+  _loggedInUser = user;
+  notifyListeners();
+}
 
-    try {
-      final nouUsuari = User(name: nom, age: edat, email: email,password: password);
-      final createdUser = await UserService.createUser(nouUsuari);
-      _users.add(nouUsuari);
-      _setLoading(false);
+ Future<bool> updateUser(User updatedUser) async {
+  _setLoading(true);
+  _setError(null);
+
+  try {
+    final user = await UserService.updateUser(updatedUser.id!, updatedUser);
+    _loggedInUser = user; // Actualizar el usuario logueado
+    notifyListeners();
+    return true;
+  } catch (e) {
+    _setError('Error actualitzant usuari: $e');
+    return false;
+  } finally {
+    _setLoading(false);
+  }
+}
+
+  Future<bool> eliminarUsuariPerId(String userId) async {
+  _setLoading(true);
+  _setError(null);
+
+  try {
+    final success = await UserService.deleteUser(userId);
+    if (success) {
+      _users.removeWhere((user) => user.id == userId);
       notifyListeners();
       return true;
-    } catch (e) {
-      _setError('Error creating user: $e');
-      _setLoading(false);
-      return false;
+    } else {
+      throw Exception('No s\'ha pogut eliminar l\'usuari');
     }
+  } catch (e) {
+    _setError('Error eliminant l\'usuari: $e');
+    return false;
+  } finally {
+    _setLoading(false);
   }
-
-  Future<bool> eliminarUsuariPerId (String id) async {
-    _setLoading(true);
-    _setError(null);
-    try{
-      final success = await UserService.deleteUser(id);
-      if (success) {
-        _users.removeWhere((user) => user.id == id);
-        notifyListeners();
-      }
-      _setLoading(false);
-      return success;
-    } catch (e) {
-      _setError('Error deleting user: $e');
-      _setLoading(false);
-      return false;
-    }
-  }
-  Future<bool> eliminarUsuari(String name) async {
-    _setLoading(true);
-    _setError(null);
-
-    try {
-      // Trobem l'usuari pel nom
-      final userToDelete = _users.firstWhere((user) => user.name == name);
-      
-      if (userToDelete.id != null) {
-        final success = await UserService.deleteUser(userToDelete.id!);
-        
-        if (success) {
-          // Eliminar l'usuari de la llista local
-          _users.removeWhere((user) => user.name == name);
-          notifyListeners();
-        }
-        
-        _setLoading(false);
-        return success;
-      } else {
-        // Si no té id, eliminar localment
-        _users.removeWhere((user) => user.name == name);
-        notifyListeners();
-        _setLoading(false);
-        return true;
-      }
-    } catch (e) {
-      _setError('Error deleting user: $e');
-      _setLoading(false);
-      return false;
-    }
-  }
+}
 }
